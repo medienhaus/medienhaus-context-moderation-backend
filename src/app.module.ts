@@ -14,7 +14,7 @@ import {
   KnockEvent,
 } from './matrix/types';
 import { getNamePartFromUserId } from './matrix/utils';
-import { lookupEmailAddress, parseCommaSeparated } from './utils';
+import { parseCommaSeparated } from './utils';
 import {
   digestSummary,
   makeDigestEmailSubject,
@@ -71,7 +71,10 @@ export class AppModule implements OnApplicationShutdown {
       }
 
       const userIdNamePart = getNamePartFromUserId(userId);
-      const emailAddress = lookupEmailAddress(userIdNamePart, lookupData);
+      const emailAddress = dataService.lookupEmailAddress(
+        userIdNamePart,
+        lookupData,
+      );
       const emailAddresses: string[] = emailAddress
         ? [emailAddress]
         : parseCommaSeparated(process.env.EMAIL_FALLBACK_DOMAINS).map(
@@ -97,16 +100,16 @@ export class AppModule implements OnApplicationShutdown {
     };
 
     const digestCallback: DigestCallback = async (
-      roomIdsByModUser: Record<string, string[]>,
       knockEventsByRoom: Record<string, KnockEvent[]>,
       childEventsByRoom: Record<string, ChildEvent[]>,
     ) => {
-      // load moderator email address lookup data
       const lookupData = this.dataService.getEmailLookupData();
+      const roomIdsByModEmail =
+        this.dataService.getRoomIdsByModEmailAddress(lookupData);
 
       // send out digest email to every moderator
-      for (const modUserId of Object.keys(roomIdsByModUser)) {
-        const roomIds = roomIdsByModUser[modUserId] || [];
+      for (const email of Object.keys(roomIdsByModEmail)) {
+        const roomIds = roomIdsByModEmail[email] || [];
 
         const summary = digestSummary(
           roomIds,
@@ -117,17 +120,18 @@ export class AppModule implements OnApplicationShutdown {
           continue;
         }
 
-        const displayName =
-          await this.matrixService.getUserDisplayName(modUserId);
-        const emailAddresses = getEmailAddressesForUserId(
-          modUserId,
+        const person = this.dataService.findFirstLookupEntryForEmail(
           lookupData,
+          email,
         );
+        if (!person?.name) {
+          this.logger.error(`Failed to look up name for ${email}`);
+        }
         await this.emailService.sendEmail(
-          emailAddresses,
+          [email],
           makeDigestEmailSubject(emailSubjectPrefix),
           generateModeratorDigestEmailContent(
-            displayName,
+            person?.name || 'Moderator',
             summary,
             process.env.FRONTEND_URL,
           ),

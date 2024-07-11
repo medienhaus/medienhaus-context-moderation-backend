@@ -15,21 +15,6 @@ export function groupAndSortEvents(events: Readonly<ChildOrKnockEvent[]>) {
   >;
 }
 
-export function getRoomIdsByModUser(
-  modUserIdsByRoom: Readonly<Record<string, string[]>>,
-) {
-  const roomIdsByModUser: Record<string, string[]> = {};
-  Object.entries(modUserIdsByRoom).forEach(([roomId, userIds]) => {
-    userIds.forEach((userId) => {
-      if (roomIdsByModUser[userId] === undefined) {
-        roomIdsByModUser[userId] = [];
-      }
-      roomIdsByModUser[userId].push(roomId);
-    });
-  });
-  return roomIdsByModUser;
-}
-
 export function getFilteredEvents(
   stateEvents: Map<string, Map<string, MatrixEvent>>,
   eventType: string,

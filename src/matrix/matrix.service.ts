@@ -4,7 +4,6 @@ import {
   ClientEvent,
   MatrixClient,
   MatrixEvent,
-  Room,
   RoomEvent,
   RoomMemberEvent,
   SyncState,
@@ -18,11 +17,7 @@ import {
   KnockAcceptedCallback,
   KnockEvent,
 } from './types';
-import {
-  getFilteredEvents,
-  getRoomIdsByModUser,
-  groupAndSortEvents,
-} from './utils';
+import { getFilteredEvents, groupAndSortEvents } from './utils';
 import { KnownMembership } from 'matrix-js-sdk/lib/types';
 
 const UNKNOWN = '(UNKNOWN)';
@@ -222,42 +217,42 @@ export class MatrixService {
     }
   }
 
-  private getModeratorIdsByRoom(
-    rooms: Room[],
-    moderatorLevel = 50, // TODO: or does medienhaus use a non-default value?
-  ) {
-    const modUserIdsByRoom: Record<string, string[]> = {};
+  // private getModeratorIdsByRoom(
+  //   rooms: Room[],
+  //   moderatorLevel = 50, // NOTE: change if server uses a non-default value
+  // ) {
+  //   const modUserIdsByRoom: Record<string, string[]> = {};
 
-    rooms.forEach((room) => {
-      const powerLevels = room.currentState.getStateEvents(
-        'm.room.power_levels',
-        '',
-      );
-      if (!powerLevels) {
-        this.logger.error(`Unable to get power levels for room ${room.name}`);
-        return;
-      } else {
-        const content = powerLevels.getContent();
-        Object.keys(content.users).forEach((userId) => {
-          const userPowerLevel = content.users[userId];
-          if (isNaN(userPowerLevel)) {
-            this.logger.error(
-              `Unable to get power level of ${userId} in room: ` + room.name,
-            );
-            return;
-          }
-          if (userPowerLevel >= moderatorLevel) {
-            if (modUserIdsByRoom[room.roomId] === undefined) {
-              modUserIdsByRoom[room.roomId] = [];
-            }
-            modUserIdsByRoom[room.roomId].push(userId);
-          }
-        });
-      }
-    });
+  //   rooms.forEach((room) => {
+  //     const powerLevels = room.currentState.getStateEvents(
+  //       'm.room.power_levels',
+  //       '',
+  //     );
+  //     if (!powerLevels) {
+  //       this.logger.error(`Unable to get power levels for room ${room.name}`);
+  //       return;
+  //     } else {
+  //       const content = powerLevels.getContent();
+  //       Object.keys(content.users).forEach((userId) => {
+  //         const userPowerLevel = content.users[userId];
+  //         if (isNaN(userPowerLevel)) {
+  //           this.logger.error(
+  //             `Unable to get power level of ${userId} in room: ` + room.name,
+  //           );
+  //           return;
+  //         }
+  //         if (userPowerLevel >= moderatorLevel) {
+  //           if (modUserIdsByRoom[room.roomId] === undefined) {
+  //             modUserIdsByRoom[room.roomId] = [];
+  //           }
+  //           modUserIdsByRoom[room.roomId].push(userId);
+  //         }
+  //       });
+  //     }
+  //   });
 
-    return modUserIdsByRoom;
-  }
+  //   return modUserIdsByRoom;
+  // }
 
   private clearEvents() {
     this.knockEvents = [];
@@ -278,21 +273,12 @@ export class MatrixService {
 
       this.clearEvents();
 
-      const rooms = this.client.getRooms();
-      const modUserIdsByRoom = this.getModeratorIdsByRoom(rooms);
-      const roomIdsByModUser = getRoomIdsByModUser(modUserIdsByRoom);
-
-      await callback(roomIdsByModUser, knockEventsByRoom, childEventsByRoom);
+      await callback(knockEventsByRoom, childEventsByRoom);
     } else {
       this.logger.log(`No queued events to process`);
     }
 
     this.dataService.setLastDigestTimestamp(ts);
-  }
-
-  async getUserDisplayName(userId: string) {
-    const { displayname } = await this.client.getProfileInfo(userId);
-    return displayname || UNKNOWN;
   }
 
   async initAutoJoin() {

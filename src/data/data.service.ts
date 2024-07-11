@@ -2,6 +2,11 @@ import * as fs from 'node:fs';
 import { Injectable } from '@nestjs/common';
 import { FileLoggerService } from '../file-logger/file-logger.service';
 import { LookUpEntry } from './types';
+import {
+  findFirstLookupEntryForEmail,
+  getRoomIdsByModEmailAddress,
+  lookupEmailAddress,
+} from './utils';
 
 @Injectable()
 export class DataService {
@@ -41,7 +46,7 @@ export class DataService {
   }
 
   getEmailLookupData() {
-    let lookupData = [];
+    let lookupData: LookUpEntry[] = [];
     try {
       lookupData = JSON.parse(
         fs.readFileSync(process.env.SPACES_EXPORT_FILE).toString(),
@@ -54,18 +59,15 @@ export class DataService {
     return lookupData;
   }
 
-  lookupEmailAddress(
-    userIdNamePart: string,
-    data: LookUpEntry[],
-  ): string | undefined {
-    for (const context of data) {
-      for (const person of context.persons) {
-        const email = person.mail.trim();
-        if (email.split('@')[0] === userIdNamePart) {
-          return email;
-        }
-      }
-    }
-    return undefined;
+  lookupEmailAddress(userIdNamePart: string, data: Readonly<LookUpEntry[]>) {
+    return lookupEmailAddress(userIdNamePart, data);
+  }
+
+  getRoomIdsByModEmailAddress(data: Readonly<LookUpEntry[]>) {
+    return getRoomIdsByModEmailAddress(data);
+  }
+
+  findFirstLookupEntryForEmail(data: Readonly<LookUpEntry[]>, email: string) {
+    return findFirstLookupEntryForEmail(data, email);
   }
 }

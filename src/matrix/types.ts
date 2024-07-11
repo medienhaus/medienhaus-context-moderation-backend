@@ -19,7 +19,6 @@ export type ChildEvent = {
 export type ChildOrKnockEvent = ChildEvent | KnockEvent;
 
 export type DigestCallback = (
-  roomIdsByModUser: Record<string, string[]>,
   knockEventsByRoom: Record<string, KnockEvent[]>,
   childEventsByRoom: Record<string, ChildEvent[]>,
 ) => Promise<void>;

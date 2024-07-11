@@ -1,9 +1,5 @@
 import { KnockEvent, ChildEvent, ChildOrKnockEvent } from './types';
-import {
-  getNamePartFromUserId,
-  getRoomIdsByModUser,
-  groupAndSortEvents,
-} from './utils';
+import { getNamePartFromUserId, groupAndSortEvents } from './utils';
 
 describe('getNamePartFromUserId()', () => {
   it('should only return the user name part', () => {
@@ -57,21 +53,5 @@ describe('groupAndSortEvents()', () => {
     expect(result['room-2'][0].time).toEqual(date2);
     expect(result['room-2'][1].roomId).toEqual('room-2');
     expect(result['room-2'][1].time).toEqual(date1);
-  });
-});
-
-describe('getRoomIdsByModUser()', () => {
-  it('should return a list of room ids by user id', () => {
-    const modUserIdsByRoom: Record<string, string[]> = {
-      'room-1': ['mod-1', 'mod-2'],
-      'room-2': ['mod-1', 'mod-3'],
-      'room-3': ['mod-3'],
-    };
-    const result = getRoomIdsByModUser(modUserIdsByRoom);
-    expect(result).toEqual({
-      'mod-1': ['room-1', 'room-2'],
-      'mod-2': ['room-1'],
-      'mod-3': ['room-2', 'room-3'],
-    });
   });
 });
