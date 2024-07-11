@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { Injectable } from '@nestjs/common';
 import { FileLoggerService } from '../file-logger/file-logger.service';
+import { LookUpEntry } from './types';
 
 @Injectable()
 export class DataService {
@@ -51,5 +52,20 @@ export class DataService {
       );
     }
     return lookupData;
+  }
+
+  lookupEmailAddress(
+    userIdNamePart: string,
+    data: LookUpEntry[],
+  ): string | undefined {
+    for (const context of data) {
+      for (const person of context.persons) {
+        const email = person.mail.trim();
+        if (email.split('@')[0] === userIdNamePart) {
+          return email;
+        }
+      }
+    }
+    return undefined;
   }
 }

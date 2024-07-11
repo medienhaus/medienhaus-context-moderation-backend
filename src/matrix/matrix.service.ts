@@ -324,7 +324,7 @@ export class MatrixService {
       const roomName = (await this.getRoomName(roomId)) || UNKNOWN;
       this.logger.log(`Bot was invited to join "${roomName}" (${roomId})`);
       try {
-        const room = await this.client.joinRoom(roomId);
+        await this.client.joinRoom(roomId);
         this.logger.log(`Joined room "${roomName}" (${roomId})`);
       } catch (err) {
         this.logger.error(
